@@ -817,8 +817,22 @@ ui <- page_navbar(
 
       # ── Section 4: GitHub ──────────────────────────────────────────────────
       div(style = "text-align:center; padding:16px 0 4px 0;",
-        tags$span("\ud83d\udd17 GitHub repository coming soon",
-                  style = "color:#bbb; font-size:0.85rem; background:#f5f5f5; border-radius:999px; padding:6px 18px;")
+        tags$a(
+          href = "https://github.com/Zukhruf1/pollinia",
+          target = "_blank",
+          style = paste0(
+            "display:inline-block;",
+            "background:#3D3428;",
+            "color:white;",
+            "padding:6px 18px;",
+            "border-radius:20px;",
+            "font-size:13px;",
+            "text-decoration:none;",
+            "font-family:'Nunito',sans-serif;",
+            "margin-top:8px;"
+          ),
+          "\U0001f4bb View on GitHub"
+        )
       )
     )
   )
