@@ -1,4 +1,4 @@
-Model,Accuracy,Precision,Recall,F1,AUC
-Random Forest,0.706,0.5877,0.3946,0.4722,0.7168
-Logistic Reg,0.6719,0.9444,0.0163,0.032,0.5756
-SVM,0.6834,0.6711,0.0977,0.1706,0.6568
+"Model","Accuracy","Precision","Recall","F1","AUC"
+"Random Forest",0.711,0.677,0.257,0.372,0.726
+"Logistic Reg",0.672,0.944,0.016,0.032,0.576
+"SVM",0.683,0.732,0.079,0.142,0.656

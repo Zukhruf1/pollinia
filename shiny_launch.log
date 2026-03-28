@@ -89,3 +89,7 @@ Warning in gzfile(file, "rb") :
 
 Listening on http://127.0.0.1:6174
 Links is a tbl_df. Converting to a plain data frame.
+Warning in gzfile(file, "rb") :
+  cannot open compressed file '../outputs/models/rf_model.rds', probable reason 'No such file or directory'
+Links is a tbl_df. Converting to a plain data frame.
+Links is a tbl_df. Converting to a plain data frame.

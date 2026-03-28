@@ -10,34 +10,40 @@ library(plotly)
 library(shinycssloaders)
 library(bipartite)
 library(pROC)
+library(ggraph)
+library(igraph)
+library(ggrepel)
 
 # ── Startup data loading ───────────────────────────────────────────────────────
 
-rf_model <- tryCatch(
-  readRDS("../outputs/models/rf_model.rds"),
-  error = function(e) NULL
-)
+setwd("C:/Users/it-ha/pollinia")
+
+rf_model     <- tryCatch(readRDS("C:/Users/it-ha/pollinia/outputs/models/rf_model.rds"),  error=function(e){cat("RF failed:",e$message,"\n");NULL})
+lr_model     <- tryCatch(readRDS("C:/Users/it-ha/pollinia/outputs/models/lr_model.rds"),  error=function(e){cat("LR failed:",e$message,"\n");NULL})
+svm_model    <- tryCatch(readRDS("C:/Users/it-ha/pollinia/outputs/models/svm_model.rds"), error=function(e){cat("SVM failed:",e$message,"\n");NULL})
+benchmark_df <- tryCatch(read.csv("C:/Users/it-ha/pollinia/outputs/models/benchmark_results.csv"), error=function(e){cat("Bench failed:",e$message,"\n");NULL})
+
+cat("=== Pollinia startup ===\n")
+cat("RF loaded:        ", !is.null(rf_model),     "\n")
+cat("LR loaded:        ", !is.null(lr_model),     "\n")
+cat("SVM loaded:       ", !is.null(svm_model),    "\n")
+cat("Benchmark loaded: ", !is.null(benchmark_df), "\n")
 
 web <- tryCatch(
-  readRDS("../data/processed/network_matrix.rds"),
+  readRDS("C:/Users/it-ha/pollinia/data/processed/network_matrix.rds"),
   error = function(e) {
     data("Safariland", package = "bipartite", envir = environment())
     Safariland
   }
 )
 
-benchmark_df <- tryCatch(
-  read_csv("../outputs/models/benchmark_results.csv", show_col_types = FALSE),
-  error = function(e) NULL
-)
-
 sensitivity_df <- tryCatch(
-  read_csv("../outputs/models/sensitivity_summary.csv", show_col_types = FALSE),
+  read_csv("C:/Users/it-ha/pollinia/outputs/models/sensitivity_summary.csv", show_col_types = FALSE),
   error = function(e) NULL
 )
 
 flower_risk_df <- tryCatch(
-  read_csv("../data/processed/flower_risk.csv", show_col_types = FALSE),
+  read_csv("C:/Users/it-ha/pollinia/data/processed/flower_risk.csv", show_col_types = FALSE),
   error = function(e) NULL
 )
 
@@ -79,6 +85,15 @@ ui <- page_navbar(
   # ── TAB 1: Garden ────────────────────────────────────────────────────────────
   nav_panel(
     title = "🌸 Garden",
+    div(
+      style = paste0(
+        "background:#E1F5EE; border-radius:20px;",
+        "padding:8px 18px; margin-bottom:14px;",
+        "display:inline-block; font-size:13px;",
+        "color:#0F6E56; font-family:'Nunito',sans-serif;"
+      ),
+      "\U0001f338 Hover or click any bee or flower to explore its ecological traits"
+    ),
     div(style = "text-align:center; padding: 32px 0 16px 0;",
       tags$h1("Pollinia", style = "font-size:2.5rem; font-weight:800; color:#3D3428; margin-bottom:4px;"),
       tags$p("Trait-mediated bee–flower interaction explorer",
@@ -629,11 +644,20 @@ ui <- page_navbar(
   # ── TAB 2: Network ───────────────────────────────────────────────────────────
   nav_panel(
     title = "🕸 Network",
+    div(
+      style = paste0(
+        "background:#FAEEDA; border-radius:20px;",
+        "padding:8px 18px; margin-bottom:14px;",
+        "display:inline-block; font-size:13px;",
+        "color:#633806; font-family:'Nunito',sans-serif;"
+      ),
+      "\U0001f578 Hover nodes to see species details \u2014 node size = degree, edge width = visits"
+    ),
     fluidRow(
       column(8,
         div(class = "card",
           tags$h4("🕸 Interaction Network", style = "font-weight:700;"),
-          withSpinner(forceNetworkOutput("network_plot", height = "520px"), color = "#8BAF7C")
+          withSpinner(plotlyOutput("network_plot", height = "520px"), color = "#8BAF7C")
         )
       ),
       column(4,
@@ -658,18 +682,27 @@ ui <- page_navbar(
     fluidRow(
       column(4,
         div(class = "card",
+          div(
+            style = paste0(
+              "background:#EEEDFE; border-radius:20px;",
+              "padding:8px 18px; margin-bottom:14px;",
+              "display:inline-block; font-size:13px;",
+              "color:#534AB7; font-family:'Nunito',sans-serif;"
+            ),
+            "\U0001f52e Enter traits below then click Predict Interaction"
+          ),
           tags$div(class = "section-header bee-icon", "Bee Traits"),
-          numericInput("tongue_length", "Tongue length (mm)", value = 8, min = 2, max = 20),
-          numericInput("body_length",   "Body length (mm)",   value = 12, min = 5, max = 22),
+          numericInput("tongue_mm", "Tongue length (mm)", value = 8, min = 2, max = 20),
+          numericInput("body_mm",   "Body length (mm)",   value = 12, min = 5, max = 22),
           selectInput("sociality", "Sociality",
                       choices = c("social", "solitary"), selected = "solitary"),
           selectInput("lecty", "Lecty",
                       choices = c("polylectic", "oligolectic"), selected = "polylectic"),
           tags$div(class = "section-header flower-icon", "Flower Traits"),
-          numericInput("tube_depth",    "Tube depth (mm)",    value = 10, min = 1, max = 30),
-          numericInput("corolla_diam",  "Corolla diam (mm)",  value = 20, min = 5, max = 50),
-          numericInput("nectar_vol",    "Nectar vol (µl)",    value = 5,  min = 0, max = 20),
-          selectInput("floral_color", "Floral colour",
+          numericInput("tube_mm",    "Tube depth (mm)",    value = 10, min = 1, max = 30),
+          numericInput("corolla_mm", "Corolla diam (mm)",  value = 20, min = 5, max = 50),
+          numericInput("nectar_ul",  "Nectar vol (µl)",    value = 5,  min = 0, max = 20),
+          selectInput("color", "Floral colour",
                       choices = c("UV_yellow","white","pink_purple","red","yellow"),
                       selected = "yellow"),
           selectInput("symmetry", "Symmetry",
@@ -681,15 +714,14 @@ ui <- page_navbar(
       ),
       column(8,
         div(class = "result-card",
-          uiOutput("predict_result")
+          uiOutput("flower_display"),
+          uiOutput("prediction_result")
         ),
         br(),
-        if (!is.null(benchmark_df)) {
-          div(class = "card",
-            tags$h5("Model Performance", style = "font-weight:700;"),
-            withSpinner(plotlyOutput("benchmark_plot", height = "280px"), color = "#8BAF7C")
-          )
-        }
+        div(class = "card",
+          tags$h5("Model Performance", style = "font-weight:700;"),
+          withSpinner(plotlyOutput("benchmark_plot", height = "280px"), color = "#8BAF7C")
+        )
       )
     )
   ),
@@ -697,16 +729,30 @@ ui <- page_navbar(
   # ── TAB 4: Extinction ────────────────────────────────────────────────────────
   nav_panel(
     title = "💀 Extinction",
+    div(
+      style = paste0(
+        "background:#FCEBEB; border-radius:20px;",
+        "padding:8px 18px; margin-bottom:14px;",
+        "display:inline-block; font-size:13px;",
+        "color:#791F1F; font-family:'Nunito',sans-serif;"
+      ),
+      "\U0001f480 Set removal % and order, then click Simulate Extinction"
+    ),
     fluidRow(
       column(4,
         div(class = "card",
           tags$h4("⚙️ Simulation Settings", style = "font-weight:700;"),
           sliderInput("ext_pct", "Remove X% of bee species",
                       min = 0, max = 100, value = 20, step = 5, post = "%"),
-          radioButtons("ext_method", "Removal order",
-                       choices = c("Random removal" = "random",
-                                   "Most-connected first (worst case)" = "abundance"),
-                       selected = "random"),
+          radioButtons(
+            "ext_method",
+            "Removal order",
+            choices = c(
+              "Random removal"                    = "random",
+              "Most-connected first (worst case)" = "degree"
+            ),
+            selected = "random"
+          ),
           br(),
           actionButton("simulate_btn", "💀 Simulate Extinction",
                        class = "btn-red", width = "100%"),
@@ -923,38 +969,111 @@ server <- function(input, output, session) {
   })
 
   # ── Network tab ──────────────────────────────────────────────────────────────
-  output$network_plot <- renderForceNetwork({
-    df <- edges_rv()
-    flowers_u <- unique(df$flower_species)
-    bees_u    <- unique(df$bee_species)
-    all_nodes <- c(flowers_u, bees_u)
-    nodes_df  <- data.frame(
-      name  = all_nodes,
-      group = c(rep(1, length(flowers_u)), rep(2, length(bees_u))),
+  output$network_plot <- renderPlotly({
+
+    `%||%` <- function(a, b) if (!is.null(a)) a else b
+
+    ig  <- igraph::graph_from_incidence_matrix(web, weighted = TRUE)
+    ly  <- igraph::layout_as_bipartite(ig)
+
+    V(ig)$group <- ifelse(V(ig)$type, "Bee", "Flower")
+    V(ig)$deg   <- igraph::degree(ig)
+    V(ig)$px    <- ly[, 1]
+    V(ig)$py    <- ly[, 2]
+    V(ig)$col   <- ifelse(V(ig)$type, "#EF9F27", "#8BAF7C")
+    V(ig)$sz    <- scales::rescale(V(ig)$deg, to = c(10, 35))
+    V(ig)$lbl   <- sapply(V(ig)$name, function(n) {
+      pts <- strsplit(n, " ")[[1]]
+      if (length(pts) >= 2) paste0(substr(pts[1], 1, 1), ". ", pts[2]) else n
+    })
+    V(ig)$tip <- paste0(
+      "<b>", V(ig)$name, "</b><br>",
+      "Type: ",   V(ig)$group, "<br>",
+      "Degree: ", V(ig)$deg
+    )
+
+    el  <- igraph::as_edgelist(ig)
+    wts <- E(ig)$weight %||% rep(1, nrow(el))
+    wn  <- scales::rescale(wts, to = c(0.4, 3.5))
+
+    nd <- data.frame(
+      name  = V(ig)$name,
+      x     = V(ig)$px,
+      y     = V(ig)$py,
+      group = V(ig)$group,
+      col   = V(ig)$col,
+      sz    = V(ig)$sz,
+      lbl   = V(ig)$lbl,
+      tip   = V(ig)$tip,
       stringsAsFactors = FALSE
     )
-    idx_map <- setNames(seq_along(all_nodes) - 1, all_nodes)
-    links_df <- df %>%
-      transmute(source = idx_map[flower_species],
-                target = idx_map[bee_species],
-                value  = pmin(visit_count / max(visit_count) * 10, 10)) %>%
-      filter(!is.na(source), !is.na(target))
 
-    forceNetwork(
-      Links   = links_df,
-      Nodes   = nodes_df,
-      Source  = "source",
-      Target  = "target",
-      Value   = "value",
-      NodeID  = "name",
-      Group   = "group",
-      opacity = 0.85,
-      zoom    = TRUE,
-      colourScale = JS('d3.scaleOrdinal().domain([1,2]).range(["#8BAF7C","#EF9F27"])'),
-      linkColour  = "#F4C0D1",
-      fontSize    = 10,
-      charge      = -60,
-      bounded     = TRUE
+    p <- plotly::plot_ly(source = "network")
+
+    for (i in seq_len(nrow(el))) {
+      s  <- el[i, 1]; tg <- el[i, 2]
+      xs <- nd$x[nd$name == s]
+      ys <- nd$y[nd$name == s]
+      xe <- nd$x[nd$name == tg]
+      ye <- nd$y[nd$name == tg]
+      p  <- plotly::add_trace(
+        p,
+        type       = "scatter", mode = "lines",
+        x          = c(xs, xe, NA),
+        y          = c(ys, ye, NA),
+        line       = list(color = "#F4C0D1", width = wn[i]),
+        hoverinfo  = "none",
+        showlegend = FALSE
+      )
+    }
+
+    # Flower trace — markers + labels (9 nodes, readable)
+    sub_f <- nd[nd$group == "Flower", ]
+    p <- plotly::add_trace(
+      p,
+      type         = "scatter", mode = "markers+text",
+      x            = sub_f$x,
+      y            = sub_f$y,
+      text         = sub_f$lbl,
+      textposition = "top center",
+      textfont     = list(size=9, color="#3D3428", family="Nunito, sans-serif"),
+      marker       = list(size=sub_f$sz, color=sub_f$col,
+                          line=list(color="white", width=1.5)),
+      customdata   = sub_f$tip,
+      hovertemplate = "%{customdata}<extra></extra>",
+      name         = "Flower",
+      showlegend   = TRUE
+    )
+
+    # Bee trace — markers only (27 nodes, hover for name)
+    sub_b <- nd[nd$group == "Bee", ]
+    p <- plotly::add_trace(
+      p,
+      type         = "scatter", mode = "markers",
+      x            = sub_b$x,
+      y            = sub_b$y,
+      marker       = list(size=sub_b$sz, color=sub_b$col,
+                          line=list(color="white", width=1.5)),
+      customdata   = sub_b$tip,
+      hovertemplate = "%{customdata}<extra></extra>",
+      name         = "Bee",
+      showlegend   = TRUE
+    )
+
+    p %>% plotly::layout(
+      paper_bgcolor = "#FEFBF0",
+      plot_bgcolor  = "#FEFBF0",
+      xaxis  = list(visible=FALSE, showgrid=FALSE, zeroline=FALSE),
+      yaxis  = list(visible=FALSE, showgrid=FALSE, zeroline=FALSE),
+      legend = list(
+        orientation = "h", y = -0.05,
+        font = list(family="Nunito, sans-serif", color="#3D3428", size=12)
+      ),
+      hoverlabel = list(
+        bgcolor="white", bordercolor="#E8E0D0",
+        font=list(family="Nunito, sans-serif", color="#3D3428", size=12)
+      ),
+      margin = list(t=20, b=50, l=10, r=10)
     )
   })
 
@@ -983,107 +1102,239 @@ server <- function(input, output, session) {
   })
 
   # ── Predict tab ──────────────────────────────────────────────────────────────
-  pred_result <- eventReactive(input$predict_btn, {
-    if (is.null(rf_model)) return(list(prob = NA, error = "Run R/04_models.R first"))
-
-    new_data <- tryCatch({
-      tibble(
-        tube_depth_mm    = input$tube_depth,
-        corolla_diam_mm  = input$corolla_diam,
-        nectar_vol_ul    = input$nectar_vol,
-        nectar_sugar_pct = 35,
-        tongue_length_mm = input$tongue_length,
-        body_length_mm   = input$body_length,
-        flight_range_m   = 1000,
-        tongue_tube_ratio = input$tongue_length / max(input$tube_depth, 0.1),
-        tongue_tube_match = abs(input$tongue_length - input$tube_depth),
-        body_flower_ratio = input$body_length / max(input$corolla_diam, 0.1),
-        degree_product    = 0,
-        centrality_sum    = 0,
-        flower_degree     = 0, flower_betweenness = 0, flower_closeness = 0,
-        bee_degree        = 0, bee_betweenness    = 0, bee_closeness    = 0,
-        color_UV_yellow   = as.integer(input$floral_color == "UV_yellow"),
-        color_white       = as.integer(input$floral_color == "white"),
-        color_pink_purple = as.integer(input$floral_color == "pink_purple"),
-        color_red         = as.integer(input$floral_color == "red"),
-        color_yellow      = as.integer(input$floral_color == "yellow"),
-        sym_actino        = as.integer(input$symmetry == "actinomorphic"),
-        soc_social        = as.integer(input$sociality == "social"),
-        lec_polylectic    = as.integer(input$lecty == "polylectic")
+  output$flower_display <- renderUI({
+    tags$div(
+      style = paste0(
+        "text-align:center; padding:30px 20px;",
+        "background:#FEFBF0; border-radius:14px;",
+        "border: 1.5px dashed #E8E0D0;"
+      ),
+      tags$svg(
+        xmlns="http://www.w3.org/2000/svg",
+        viewBox="0 0 120 120", width="90", height="90",
+        tags$line(x1="60",y1="115",x2="60",y2="78",
+          stroke="#8BAF7C",`stroke-width`="4",
+          `stroke-linecap`="round"),
+        tags$ellipse(cx="60",cy="50",rx="11",ry="22",
+          fill="#D3D1C7",opacity="0.6",
+          transform="rotate(0 60 70)"),
+        tags$ellipse(cx="60",cy="50",rx="11",ry="22",
+          fill="#D3D1C7",opacity="0.6",
+          transform="rotate(72 60 70)"),
+        tags$ellipse(cx="60",cy="50",rx="11",ry="22",
+          fill="#D3D1C7",opacity="0.6",
+          transform="rotate(144 60 70)"),
+        tags$ellipse(cx="60",cy="50",rx="11",ry="22",
+          fill="#D3D1C7",opacity="0.6",
+          transform="rotate(216 60 70)"),
+        tags$ellipse(cx="60",cy="50",rx="11",ry="22",
+          fill="#D3D1C7",opacity="0.6",
+          transform="rotate(288 60 70)"),
+        tags$circle(cx="60",cy="70",r="11",fill="#B4B2A9"),
+        tags$circle(cx="60",cy="70",r="5",fill="#888780")
+      ),
+      tags$p(
+        "Set bee and flower traits, then click",
+        tags$br(),
+        tags$strong("Predict Interaction",
+          style="color:#8BAF7C;"),
+        style=paste0(
+          "color:#7A6E64; font-size:13px;",
+          "margin:12px 0 0 0; line-height:1.6;"
+        )
       )
-    }, error = function(e) NULL)
-
-    if (is.null(new_data)) return(list(prob = NA, error = "Feature error"))
-
-    prob <- tryCatch(
-      predict(rf_model, new_data, type = "prob")[, "yes"],
-      error = function(e) NA
     )
-    list(prob = prob, error = NULL)
   })
 
-  output$predict_result <- renderUI({
-    if (input$predict_btn == 0) {
-      return(div(style = "text-align:center; padding-top:60px; color:#bbb;",
-        tags$p("🌸", style = "font-size:3rem;"),
-        tags$p("Enter traits and click Predict", style = "font-size:1rem;")
-      ))
-    }
-    res <- pred_result()
-    if (!is.null(res$error)) {
-      return(div(class = "result-card",
-        tags$p(res$error, style = "color:#E24B4A; font-weight:700;")))
-    }
-    prob <- res$prob
-    if (is.na(prob)) return(div(class = "result-card",
-                                tags$p("Prediction failed", style = "color:#E24B4A;")))
+  output$prediction_result <- renderUI({
+    tags$div(
+      style=paste0(
+        "background:#FEFBF0; border-radius:14px;",
+        "padding:16px 20px; text-align:center;",
+        "border:1.5px dashed #E8E0D0; margin:8px 0;"
+      ),
+      tags$p(
+        "Your prediction will appear here",
+        style="color:#B4B2A9; font-size:13px; margin:0;"
+      )
+    )
+  })
 
-    pct  <- round(prob * 100)
-    filled <- round(prob * 5)
+  observeEvent(input$predict_btn, {
+    req(input$tongue_mm, input$body_mm, input$tube_mm,
+        input$corolla_mm, input$nectar_ul)
 
-    petals <- lapply(1:5, function(i) {
-      angle <- paste0((i-1) * 72, "deg")
-      cls   <- if (i <= filled) "petal filled" else "petal"
-      tags$div(class = cls,
-               style = paste0("--angle:", angle, "; transform: rotate(", angle, ");"))
+    new_obs <- data.frame(
+      tube_depth_mm     = as.numeric(input$tube_mm),
+      corolla_diam_mm   = as.numeric(input$corolla_mm),
+      nectar_vol_ul     = as.numeric(input$nectar_ul),
+      nectar_sugar_pct  = 30,
+      tongue_length_mm  = as.numeric(input$tongue_mm),
+      body_length_mm    = as.numeric(input$body_mm),
+      flight_range_m    = 500,
+      flower_degree     = 5,
+      flower_betweenness = 0.1,
+      flower_closeness  = 0.3,
+      bee_degree        = 5,
+      bee_betweenness   = 0.1,
+      bee_closeness     = 0.3,
+      tongue_tube_ratio = as.numeric(input$tongue_mm) / max(as.numeric(input$tube_mm), 0.1),
+      tongue_tube_match = abs(as.numeric(input$tongue_mm) - as.numeric(input$tube_mm)),
+      body_flower_ratio = as.numeric(input$body_mm) / max(as.numeric(input$corolla_mm), 0.1),
+      degree_product    = 25,
+      centrality_sum    = 0.2,
+      color_UV_yellow   = as.integer(input$color == "UV_yellow"),
+      color_white       = as.integer(input$color == "white"),
+      color_pink_purple = as.integer(input$color == "pink_purple"),
+      color_red         = as.integer(input$color == "red"),
+      color_yellow      = as.integer(input$color == "yellow"),
+      sym_actino        = as.integer(input$symmetry == "actinomorphic"),
+      soc_social        = as.integer(input$sociality == "social"),
+      lec_polylectic    = as.integer(input$lecty == "polylectic")
+    )
+
+    cat("=== Predict debug ===\n")
+    cat("Input color:", input$color, "\n")
+    cat("Input tongue:", input$tongue_mm, "\n")
+    cat("Input tube:", input$tube_mm, "\n")
+    cat("new_obs columns:", paste(names(new_obs), collapse=", "), "\n")
+    cat("tongue_tube_ratio:", new_obs$tongue_tube_ratio, "\n")
+    cat("color_pink_purple:", new_obs$color_pink_purple, "\n")
+
+    expected <- c(
+      "tube_depth_mm","corolla_diam_mm","nectar_vol_ul",
+      "nectar_sugar_pct","tongue_length_mm","body_length_mm",
+      "flight_range_m","flower_degree","flower_betweenness",
+      "flower_closeness","bee_degree","bee_betweenness",
+      "bee_closeness","tongue_tube_ratio","tongue_tube_match",
+      "body_flower_ratio","degree_product","centrality_sum",
+      "color_UV_yellow","color_white","color_pink_purple",
+      "color_red","color_yellow","sym_actino",
+      "soc_social","lec_polylectic"
+    )
+
+    missing_cols <- setdiff(expected, names(new_obs))
+    extra_cols   <- setdiff(names(new_obs), expected)
+
+    if (length(missing_cols) > 0) {
+      cat("MISSING columns:", paste(missing_cols, collapse=", "), "\n")
+      for (col in missing_cols) new_obs[[col]] <- 0
+    }
+    if (length(extra_cols) > 0) {
+      cat("EXTRA columns:", paste(extra_cols, collapse=", "), "\n")
+      new_obs <- new_obs[, expected, drop=FALSE]
+    }
+
+    new_obs <- new_obs[, expected, drop=FALSE]
+    cat("Final new_obs ncol:", ncol(new_obs), "\n")
+
+    prob <- tryCatch({
+      if (is.null(rf_model)) stop("rf_model is NULL")
+      p <- predict(rf_model, newdata=new_obs, type="prob")
+      cat("Raw prob:", p[1,"yes"], "\n")
+      round(p[1,"yes"] * 100, 1)
+    }, error=function(e){
+      cat("Prediction error:", e$message, "\n")
+      NA
     })
 
-    if (prob > 0.5) {
-      tagList(
-        tags$p("LIKELY INTERACTION 🌸🐝", class = "result-yes bloom-yes"),
-        div(class = "petal-gauge", petals),
-        tags$p(paste0("Interaction probability: ", pct, "%"),
-               style = "font-size:1.1rem; font-weight:700; color:#EF9F27;"),
-        tags$p("These trait values suggest good morphological matching.",
-               style = "color:#7a6e60; font-size:0.9rem; margin-top:8px;")
+    cat("Final probability:", prob, "%\n")
+
+    petal_colors <- c(
+      UV_yellow   = "#EF9F27",
+      white       = "#F5F0E8",
+      pink_purple = "#C8C0E8",
+      red         = "#E24B4A",
+      yellow      = "#FAC775"
+    )
+    pc <- petal_colors[[input$color]]
+    if (is.null(pc)) pc <- "#EF9F27"
+
+    output$flower_display <- renderUI({
+      tags$div(
+        style="text-align:center;padding:16px 0;",
+        tags$svg(
+          xmlns="http://www.w3.org/2000/svg",
+          viewBox="0 0 120 120", width="100", height="100",
+          tags$line(x1="60",y1="115",x2="60",y2="78",
+            stroke="#8BAF7C",`stroke-width`="4",`stroke-linecap`="round"),
+          tags$ellipse(cx="60",cy="50",rx="11",ry="22",fill=pc,opacity="0.9",
+            transform="rotate(0 60 70)"),
+          tags$ellipse(cx="60",cy="50",rx="11",ry="22",fill=pc,opacity="0.9",
+            transform="rotate(72 60 70)"),
+          tags$ellipse(cx="60",cy="50",rx="11",ry="22",fill=pc,opacity="0.9",
+            transform="rotate(144 60 70)"),
+          tags$ellipse(cx="60",cy="50",rx="11",ry="22",fill=pc,opacity="0.9",
+            transform="rotate(216 60 70)"),
+          tags$ellipse(cx="60",cy="50",rx="11",ry="22",fill=pc,opacity="0.9",
+            transform="rotate(288 60 70)"),
+          tags$circle(cx="60",cy="70",r="11",fill="#EF9F27"),
+          tags$circle(cx="60",cy="70",r="5", fill="#633806")
+        )
       )
-    } else {
-      tagList(
-        tags$p("UNLIKELY 🌿", class = "result-no bloom-no"),
-        div(class = "petal-gauge", petals),
-        tags$p(paste0("Interaction probability: ", pct, "%"),
-               style = "font-size:1.1rem; font-weight:700; color:#C8C0E8;"),
-        tags$p("Trait mismatch detected — consider adjusting tongue/tube ratio.",
-               style = "color:#7a6e60; font-size:0.9rem; margin-top:8px;")
-      )
-    }
+    })
+
+    output$prediction_result <- renderUI({
+      if (is.na(prob) || is.null(rf_model)) {
+        tags$div(
+          style=paste0("background:#FFF3E0;border-radius:14px;",
+                       "padding:16px 20px;border:1.5px solid #E8E0D0;",
+                       "text-align:center;margin:8px 0;"),
+          tags$p("Model not loaded. Check console for errors.",
+                 style="color:#E24B4A;font-size:13px;margin:0;font-weight:500;")
+        )
+      } else {
+        is_likely <- prob > 50
+        bg  <- if(is_likely) "#E8F5E9" else "#FFF3E0"
+        bd  <- if(is_likely) "#8BAF7C" else "#EF9F27"
+        tc  <- if(is_likely) "#27500A" else "#633806"
+        lbl <- if(is_likely) "Likely Interaction 🌸" else "Unlikely Interaction 🌿"
+        tags$div(
+          style=paste0("background:",bg,";border-radius:14px;",
+                       "padding:18px 22px;border:2px solid ",bd,";",
+                       "text-align:center;margin:8px 0;"),
+          tags$h3(lbl, style=paste0("color:",tc,";margin:0 0 8px 0;",
+                                     "font-size:1.15rem;font-weight:700;")),
+          tags$p(paste0("Interaction probability: ", prob, "%"),
+                 style="color:#3D3428;font-size:15px;font-weight:600;margin:0 0 10px 0;"),
+          tags$div(
+            style="background:#E8E0D0;border-radius:20px;height:10px;overflow:hidden;",
+            tags$div(style=paste0("width:",prob,"%;background:",bd,";",
+                                  "height:100%;border-radius:20px;",
+                                  "transition:width 0.6s ease;"))
+          )
+        )
+      }
+    })
   })
 
   output$benchmark_plot <- renderPlotly({
-    if (is.null(benchmark_df)) return(NULL)
-    df_long <- benchmark_df %>%
-      pivot_longer(-Model, names_to = "Metric", values_to = "Value")
-    colors <- c("Random Forest" = "#EF9F27", "Logistic Reg" = "#8BAF7C", "SVM" = "#C8C0E8")
-    plot_ly(df_long, x = ~Metric, y = ~Value, color = ~Model,
-            colors = colors, type = "bar") %>%
-      layout(
-        barmode    = "group",
-        paper_bgcolor = "#FEFBF0", plot_bgcolor = "#FEFBF0",
-        font  = list(family = "Nunito"),
-        yaxis = list(range = c(0,1), title = "Score"),
-        xaxis = list(title = ""),
-        legend = list(orientation = "h", y = -0.2)
+    if (is.null(benchmark_df)) {
+      plotly::plotly_empty() %>%
+        plotly::layout(
+          title=list(text="Benchmark unavailable",
+                     font=list(color="#7A6E64",size=13)),
+          paper_bgcolor="#FEFBF0", plot_bgcolor="#FEFBF0")
+    } else {
+      df_long <- tidyr::pivot_longer(
+        benchmark_df, -Model,
+        names_to="Metric", values_to="Value"
       )
+      plotly::plot_ly(
+        df_long, x=~Metric, y=~Value, color=~Model, type="bar",
+        colors=c("#EF9F27","#8BAF7C","#C8C0E8")
+      ) %>%
+        plotly::layout(
+          barmode="group",
+          yaxis=list(range=c(0,1), title="Score", gridcolor="#E8E0D0"),
+          xaxis=list(title=""),
+          paper_bgcolor="#FEFBF0",
+          plot_bgcolor="#FEFBF0",
+          legend=list(orientation="h", y=-0.25),
+          font=list(family="Nunito, sans-serif", color="#3D3428"),
+          margin=list(t=20,b=60)
+        )
+    }
   })
 
   # ── Extinction tab ────────────────────────────────────────────────────────────
@@ -1101,10 +1352,29 @@ server <- function(input, output, session) {
   })
 
   output$extinction_plot <- renderPlotly({
+    pct <- input$ext_pct   # reactive dependency on slider
     res <- ext_result()
     if (is.null(res)) {
-      return(plot_ly() %>% layout(title = "Click Simulate to run",
-                                   paper_bgcolor="#FEFBF0", plot_bgcolor="#FEFBF0"))
+      return(
+        plotly::plotly_empty() %>%
+          plotly::layout(
+            title = list(
+              text = "Set options above then click Simulate Extinction",
+              font = list(color="8BAF7C", size=13, family="Nunito, sans-serif")
+            ),
+            paper_bgcolor = "#FEFBF0",
+            plot_bgcolor  = "#FEFBF0",
+            annotations = list(list(
+              text = paste0(
+                "The curve shows flower species surviving",
+                " as bee species are removed"
+              ),
+              x=0.5, y=0.4, xref="paper", yref="paper",
+              showarrow=FALSE,
+              font=list(color="#B4B2A9", size=12, family="Nunito, sans-serif")
+            ))
+          )
+      )
     }
     df  <- res$curve
     rob <- res$rob
@@ -1115,21 +1385,50 @@ server <- function(input, output, session) {
     ys <- if ("mean" %in% names(df)) df$mean else df[,1]
     ys_norm <- ys / max(ys, na.rm=TRUE) * 100
 
+    cutoff_pct     <- pct
+    cut_idx        <- which.min(abs(xs - cutoff_pct))
+    survival_at_cut <- round(ys_norm[cut_idx], 1)
+
     plot_ly() %>%
       add_trace(x = xs, y = ys_norm, type = "scatter", mode = "lines",
                 fill = "tozeroy", fillcolor = paste0(col,"44"),
                 line = list(color = col, width = 2.5),
                 name = res$method) %>%
-      add_annotations(x = 50, y = 50,
-                      text = paste0("Robustness: ", round(rob, 3)),
-                      showarrow = FALSE,
-                      font = list(size = 13, color = "#3D3428", family = "Nunito")) %>%
       layout(
         paper_bgcolor = "#FEFBF0", plot_bgcolor = "#FEFBF0",
         font  = list(family = "Nunito"),
         xaxis = list(title = "Bee species removed (%)", range = c(0,100)),
         yaxis = list(title = "Flower species surviving (%)", range = c(0,105)),
-        title = list(text = "Co-extinction cascade", font = list(size=14))
+        title = list(text = "Co-extinction cascade", font = list(size=14)),
+        shapes = list(list(
+          type = "line",
+          x0   = cutoff_pct, x1 = cutoff_pct,
+          y0   = 0,          y1 = 100,
+          line = list(color="#EF9F27", width=2, dash="dot")
+        )),
+        annotations = list(
+          list(
+            x          = cutoff_pct,
+            y          = survival_at_cut,
+            text       = paste0(
+              survival_at_cut, "% flowers survive<br>",
+              "at ", cutoff_pct, "% bee loss"
+            ),
+            showarrow  = TRUE,
+            arrowhead  = 2,
+            arrowcolor = "#EF9F27",
+            font       = list(color="#3D3428", size=11, family="Nunito, sans-serif"),
+            bgcolor    = "white",
+            bordercolor = "#E8E0D0",
+            borderwidth = 1
+          ),
+          list(
+            x=0.5, y=0.05, xref="paper", yref="paper",
+            text       = paste0("Robustness: ", round(rob, 3)),
+            showarrow  = FALSE,
+            font       = list(color="#7A6E64", size=11, family="Nunito, sans-serif")
+          )
+        )
       )
   })
 
