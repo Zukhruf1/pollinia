@@ -1,0 +1,208 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap');
+
+/* ── Base ── */
+body, html {
+  font-family: 'Nunito', sans-serif !important;
+  background-color: #FEFBF0;
+  background-image: radial-gradient(#8BAF7C22 1px, transparent 1px);
+  background-size: 24px 24px;
+  color: #3D3428;
+}
+
+h1, h2, h3, h4, h5 { font-family: 'Nunito', sans-serif !important; color: #3D3428; }
+
+/* ── Navbar ── */
+.navbar, .navbar-default {
+  background-color: #8BAF7C !important;
+  border: none !important;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.10);
+  font-family: 'Nunito', sans-serif !important;
+}
+.navbar-default .navbar-brand,
+.navbar-default .navbar-nav > li > a {
+  color: #fff !important;
+  font-weight: 700;
+  font-size: 1rem;
+}
+.navbar-default .navbar-nav > .active > a,
+.navbar-default .navbar-nav > li > a:hover {
+  background-color: rgba(255,255,255,0.2) !important;
+  color: #fff !important;
+  border-radius: 8px;
+}
+
+/* ── Cards ── */
+.card, .well, .panel {
+  background: #fff;
+  border-radius: 16px !important;
+  border: 1.5px solid #E8E0D0 !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.06) !important;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+/* ── Metric pills ── */
+.metric-pill {
+  display: inline-block;
+  padding: 6px 16px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin: 4px;
+  border: 1.5px solid #E8E0D0;
+}
+.pill-sage    { background: #8BAF7C22; color: #4a7a5a; }
+.pill-amber   { background: #EF9F2722; color: #b06a00; }
+.pill-rose    { background: #F4C0D122; color: #a05070; }
+.pill-lavender{ background: #C8C0E822; color: #5a50a0; }
+.pill-blue    { background: #B8DCF022; color: #3060a0; }
+
+/* ── Buttons ── */
+.btn-sage {
+  background-color: #8BAF7C !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 12px !important;
+  font-family: 'Nunito', sans-serif !important;
+  font-weight: 700 !important;
+  padding: 8px 24px !important;
+  transition: all 0.2s ease;
+}
+.btn-sage:hover { background-color: #6a9060 !important; transform: translateY(-1px); }
+
+.btn-amber {
+  background-color: #EF9F27 !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 12px !important;
+  font-family: 'Nunito', sans-serif !important;
+  font-weight: 700 !important;
+  padding: 8px 24px !important;
+  width: 100% !important;
+  transition: all 0.2s ease;
+}
+.btn-amber:hover { background-color: #d08010 !important; transform: translateY(-1px); }
+
+.btn-red {
+  background-color: #E24B4A !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 12px !important;
+  font-family: 'Nunito', sans-serif !important;
+  font-weight: 700 !important;
+  padding: 8px 24px !important;
+  transition: all 0.2s ease;
+}
+
+/* ── Inputs ── */
+.form-control, select, input[type="number"] {
+  border-radius: 10px !important;
+  border: 1.5px solid #E8E0D0 !important;
+  font-family: 'Nunito', sans-serif !important;
+  background: #FEFBF0 !important;
+}
+.form-control:focus { border-color: #8BAF7C !important; box-shadow: 0 0 0 3px #8BAF7C33 !important; }
+
+.irs--shiny .irs-bar { background: #8BAF7C !important; border-color: #8BAF7C !important; }
+.irs--shiny .irs-handle { background: #EF9F27 !important; border-color: #EF9F27 !important; }
+
+/* ── Petal gauge ── */
+.petal-gauge { display: flex; justify-content: center; gap: 8px; margin: 16px 0; }
+.petal {
+  width: 32px; height: 44px;
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  background: #E8E0D0;
+  transform-origin: bottom center;
+  transition: background 0.5s ease, transform 0.3s ease;
+}
+.petal.filled { background: #EF9F27; transform: rotate(var(--angle)) scale(1.05); }
+
+/* ── Bloom animations ── */
+@keyframes bloom {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.15); filter: drop-shadow(0 0 8px #EF9F27); }
+  100% { transform: scale(1); }
+}
+@keyframes wiggle {
+  0%, 100% { transform: rotate(-8deg); }
+  50%       { transform: rotate(8deg); }
+}
+@keyframes floatUp {
+  0%   { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-40px) scale(0.5); }
+}
+
+.bloom-yes { animation: bloom 0.8s ease 3; }
+.bloom-no  { opacity: 0.5; filter: grayscale(0.4); }
+
+.bee-nav {
+  display: inline-block;
+  font-size: 1.3rem;
+  animation: wiggle 1.2s ease-in-out infinite;
+  margin-left: 8px;
+}
+
+/* ── Result card ── */
+.result-card {
+  background: #fff;
+  border-radius: 20px;
+  border: 1.5px solid #E8E0D0;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+  padding: 28px;
+  text-align: center;
+  min-height: 280px;
+}
+.result-yes { color: #8BAF7C; font-size: 1.8rem; font-weight: 800; }
+.result-no  { color: #C8C0E8; font-size: 1.8rem; font-weight: 800; }
+
+/* ── Network risk table colors ── */
+.risk-low    { background-color: #8BAF7C22 !important; }
+.risk-medium { background-color: #EF9F2722 !important; }
+.risk-high   { background-color: #E24B4A22 !important; }
+
+/* ── Canvas container ── */
+#gardenCanvas {
+  border-radius: 16px;
+  border: 1.5px solid #E8E0D0;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+  display: block;
+  margin: 0 auto;
+}
+
+/* ── About citation card ── */
+.citation-card {
+  background: #fff;
+  border-left: 5px solid #8BAF7C;
+  border-radius: 12px;
+  padding: 20px 24px;
+  font-style: italic;
+  color: #5a5040;
+  margin: 12px 0;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+}
+
+/* ── Section headers ── */
+.section-header {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #3D3428;
+  border-bottom: 2px solid #E8E0D0;
+  padding-bottom: 6px;
+  margin: 16px 0 12px 0;
+}
+
+/* ── Keystone pills ── */
+.keystone-bee    { background: #EF9F2733; color: #7a5000; border-radius: 999px; padding: 4px 12px; margin: 3px; display: inline-block; font-size: 0.82rem; font-weight: 600; }
+.keystone-flower { background: #8BAF7C33; color: #2a5a30; border-radius: 999px; padding: 4px 12px; margin: 3px; display: inline-block; font-size: 0.82rem; font-weight: 600; }
+
+/* ── Spinner override ── */
+.shiny-spinner-output-container .spinner { color: #8BAF7C !important; }
+
+/* ── DT table ── */
+.dataTables_wrapper { font-family: 'Nunito', sans-serif !important; }
+table.dataTable thead { background: #8BAF7C; color: white; }
+table.dataTable tbody tr:nth-child(even) { background: #FEFBF022; }
+
+/* ── Flower SVG illus ── */
+.flower-icon::before { content: "🌸"; font-size: 1.4rem; margin-right: 6px; }
+.bee-icon::before    { content: "🐝"; font-size: 1.4rem; margin-right: 6px; }
