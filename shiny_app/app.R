@@ -277,7 +277,7 @@ ui <- page_navbar(
           canvas.height = canvas.offsetHeight || 380;
           var W = canvas.width, H = canvas.height, groundY = H*0.62;
 
-          var xs = [0.12,0.22,0.35,0.50,0.62,0.72,0.82,0.90];
+          var xs = [0.12,0.22,0.35,0.43,0.50,0.62,0.72,0.82,0.90];
           for (var i=0; i<xs.length; i++) {
             var fd = flowerDefs[i % flowerDefs.length];
             flowers.push({
@@ -287,9 +287,19 @@ ui <- page_navbar(
               name: flowerNames[i % flowerNames.length],
               tubeDepth: Math.round(rnd(4,22)),
               nectar: Math.round(rnd(2,12)),
-              visitors: Math.round(rnd(3,12))
+              visitors: Math.round(rnd(3,12)),
+              swaySpeed: 0.8, swayAmt: 5
             });
           }
+          // 9th flower override — Ribes magellanicum
+          flowers[8].name      = "Ribes magellanicum";
+          flowers[8].color     = "#B8DCF0";
+          flowers[8].tubeDepth = Math.round(rnd(4,14));
+          flowers[8].nectar    = Math.round(rnd(2,8));
+          flowers[8].visitors  = Math.round(rnd(2,7));
+          flowers[8].swaySpeed = 0.6;
+          flowers[8].swayAmt   = 3.5;
+          flowers[8].scale     = 0.85 + Math.random()*0.3;
 
           for (var b=0; b<3; b++) {
             var ti = Math.floor(rnd(0, flowers.length));
@@ -462,7 +472,7 @@ ui <- page_navbar(
           // Flowers
           for (var fi=0; fi<flowers.length; fi++) {
             var fl=flowers[fi];
-            var sway=Math.sin(t*0.8+fl.phase)*5;
+            var sway=Math.sin(t*(fl.swaySpeed||0.8)+fl.phase)*(fl.swayAmt||5);
             if(fl.scaleDur>0){fl.scale=1+0.15*Math.sin((1-fl.scaleDur/20)*Math.PI);fl.scaleDur--;}
             else fl.scale=1;
             ctx.save(); ctx.translate(fl.x,fl.y); ctx.scale(fl.scale,fl.scale); ctx.translate(-fl.x,-fl.y);

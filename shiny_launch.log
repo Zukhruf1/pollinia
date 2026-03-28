@@ -1,0 +1,91 @@
+Loading required package: shiny
+
+Attaching package: 'bslib'
+
+The following object is masked from 'package:utils':
+
+    page
+
+── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
+✔ dplyr     1.2.0     ✔ readr     2.2.0
+✔ forcats   1.0.1     ✔ stringr   1.6.0
+✔ ggplot2   4.0.2     ✔ tibble    3.3.1
+✔ lubridate 1.9.5     ✔ tidyr     1.3.2
+✔ purrr     1.2.1     
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()
+ℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors
+
+Attaching package: 'DT'
+
+The following object is masked from 'package:networkD3':
+
+    JS
+
+The following objects are masked from 'package:shiny':
+
+    dataTableOutput, renderDataTable
+
+
+Attaching package: 'plotly'
+
+The following object is masked from 'package:ggplot2':
+
+    last_plot
+
+The following object is masked from 'package:stats':
+
+    filter
+
+The following object is masked from 'package:graphics':
+
+    layout
+
+Loading required package: sna
+Loading required package: statnet.common
+
+Attaching package: 'statnet.common'
+
+The following objects are masked from 'package:base':
+
+    attr, order, replace
+
+Loading required package: network
+
+'network' 1.20.0 (2026-02-06), part of the Statnet Project
+* 'news(package="network")' for changes since last version
+* 'citation("network")' for citation information
+* 'https://statnet.org' for help, support, and other information
+
+sna: Tools for Social Network Analysis
+Version 2.8 created on 2024-09-07.
+copyright (c) 2005, Carter T. Butts, University of California-Irvine
+ For citation information, type citation("sna").
+ Type help(package="sna") to get started.
+
+Loading required package: vegan
+Loading required package: permute
+ This is bipartite 2.24.
+ For latest changes see versionlog in ?"bipartite-package". For citation see: citation("bipartite").
+ Have a nice time plotting and analysing two-mode networks.
+
+Attaching package: 'bipartite'
+
+The following object is masked from 'package:vegan':
+
+    nullmodel
+
+Type 'citation("pROC")' for a citation.
+
+Attaching package: 'pROC'
+
+The following objects are masked from 'package:stats':
+
+    cov, smooth, var
+
+Warning in gzfile(file, "rb") :
+  cannot open compressed file '../outputs/models/rf_model.rds', probable reason 'No such file or directory'
+
+Listening on http://127.0.0.1:6174
+Links is a tbl_df. Converting to a plain data frame.
